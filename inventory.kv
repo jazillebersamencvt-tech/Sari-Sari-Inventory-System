@@ -1,0 +1,478 @@
+#:kivy 2.1.0
+#:import dp kivy.metrics.dp
+#:set BG [0.08, 0.09, 0.11, 1]
+#:set CARD [0.13, 0.14, 0.18, 1]
+#:set ACCENT [0.0, 0.7, 0.6, 1]
+#:set TEXT [1,1,1,1]
+#:set SUB [0.6,0.6,0.6,1]
+
+ScreenManager:
+    LoginScreen:
+    Dashboard:
+    InventoryScreen:
+    SaleScreen:
+    ManageScreen:
+    EditScreen:
+    ReportScreen:
+    SettingsScreen:
+
+# ---------- COMPONENTS ----------
+
+<ModernInput@TextInput>:
+    size_hint_y: None
+    height: dp(48)
+    background_normal: ''
+    background_active: ''
+    background_color: CARD
+    foreground_color: TEXT
+    cursor_color: ACCENT
+    padding: [12, 12]
+    multiline: False
+
+<PrimaryBtn@Button>:
+    size_hint_y: None
+    height: dp(50)
+    background_normal: ''
+    background_color: ACCENT
+    color: [1,1,1,1]
+    bold: True
+    font_size: '14sp'
+
+<Card@BoxLayout>:
+    orientation: 'vertical'
+    padding: dp(15)
+    spacing: dp(8)
+    size_hint_y: None
+    height: dp(110)
+    canvas.before:
+        Color:
+            rgba: CARD
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [16]
+
+<StatCard@Button>:
+    size_hint_y: None
+    height: dp(110)
+    background_normal: ''
+    background_color: CARD
+    color: TEXT
+    markup: True
+    halign: 'left'
+    valign: 'middle'
+    text_size: self.width - dp(24), None
+    padding: [dp(15), dp(15)]
+    font_size: '14sp'
+
+# ---------- LOGIN ----------
+
+<LoginScreen>:
+    name: "login"
+    canvas.before:
+        Color:
+            rgba: BG
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: "vertical"
+        padding: dp(30)
+        spacing: dp(20)
+        Label:
+            text: "SARI-SARI POS"
+            font_size: '26sp'
+            bold: True
+            color: ACCENT
+        ModernInput:
+            id: u
+            hint_text: "Username"
+        ModernInput:
+            id: p
+            hint_text: "Password"
+            password: True
+        Label:
+            text: root.error_msg
+            color: [1,0.3,0.3,1]
+        PrimaryBtn:
+            text: "LOGIN"
+            on_release: root.verify_login(u.text, p.text)
+
+# ---------- DASHBOARD ----------
+
+<Dashboard>:
+    name: "dashboard"
+    canvas.before:
+        Color:
+            rgba: BG
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: "vertical"
+        padding: dp(20)
+        spacing: dp(15)
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: dp(40)
+            Label:
+                text: "Dashboard"
+                font_size: '22sp'
+                bold: True
+                color: TEXT
+                size_hint_x: None
+                width: self.texture_size[0]
+            Widget:  # Spacer
+                size_hint_x: 1
+            Button:
+                text: "⚙"
+                size_hint: None, None
+                width: dp(50)
+                height: dp(40)
+                background_normal: ''
+                background_color: CARD
+                color: TEXT
+                font_size: '18sp'
+                on_release: root.nav('settings')
+        GridLayout:
+            cols: 2
+            spacing: dp(10)
+            size_hint_y: None
+            height: dp(240)
+            StatCard:
+                text: "[b]Total Products[/b]\n" + root.total_items_text
+                on_release: root.nav('inventory')
+            StatCard:
+                text: "[b]Low Stock[/b]\n" + root.low_stock_text
+                background_color: root.low_stock_bg
+                on_release: root.nav('inventory')
+            StatCard:
+                text: "[b]Sales Today[/b]\n" + root.sales_today_text
+                on_release: root.nav('sale')
+            StatCard:
+                text: "[b]Profit[/b]\n" + root.profit_today_text
+                on_release: root.nav('reports')
+        Label:
+            text: "Quick Actions"
+            size_hint_y: None
+            height: dp(30)
+            color: TEXT
+            bold: True
+            font_size: '16sp'
+        PrimaryBtn:
+            text: "+ Add Product"
+            on_release: app.root.current = "manage"
+        PrimaryBtn:
+            text: "New Sale"
+            on_release: app.root.current = "sale"
+
+# ---------- INVENTORY ----------
+
+<InventoryScreen>:
+    name: "inventory"
+    canvas.before:
+        Color:
+            rgba: BG
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: "vertical"
+        padding: dp(15)
+        spacing: dp(10)
+        Label:
+            text: "Inventory"
+            font_size: '18sp'
+            color: TEXT
+        ModernInput:
+            id: search_input
+            hint_text: "Search products..."
+            on_text: root.filter_products(self.text)
+        ScrollView:
+            BoxLayout:
+                id: inv_list
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(8)
+        PrimaryBtn:
+            text: "Back"
+            on_release: app.root.current = "dashboard"
+
+# ---------- SALE ----------
+
+<SaleScreen>:
+    name: "sale"
+    canvas.before:
+        Color:
+            rgba: BG
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: "vertical"
+        padding: dp(20)
+        spacing: dp(15)
+        Label:
+            text: "New Sale"
+            font_size: '18sp'
+            color: TEXT
+        ModernInput:
+            id: prod_search
+            hint_text: "Search product..."
+            on_text: root.filter_products(self.text)
+        Spinner:
+            id: prod_spinner
+            text: "Select product"
+            size_hint_y: None
+            height: dp(48)
+        ModernInput:
+            id: qty
+            hint_text: "Quantity"
+        Label:
+            text: root.status_msg
+            color: ACCENT
+        PrimaryBtn:
+            text: "Complete Sale"
+            on_release: root.process(prod_spinner.text, qty.text)
+        PrimaryBtn:
+            text: "Back"
+            on_release: app.root.current = "dashboard"
+
+# ---------- MANAGE ----------
+
+<ManageScreen>:
+    name: "manage"
+    canvas.before:
+        Color:
+            rgba: BG
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    ScrollView:
+        BoxLayout:
+            orientation: "vertical"
+            padding: dp(20)
+            spacing: dp(12)
+            size_hint_y: None
+            height: self.minimum_height
+            Label:
+                text: "Add Product"
+                font_size: '18sp'
+                color: TEXT
+            ModernInput:
+                id: search_existing
+                hint_text: "Search existing products..."
+                on_text: root.search_existing(self.text)
+            ModernInput:
+                id: n
+                hint_text: "Name"
+            ModernInput:
+                id: cat
+                hint_text: "Category"
+            ModernInput:
+                id: c
+                hint_text: "Cost"
+            ModernInput:
+                id: r
+                hint_text: "Retail"
+            ModernInput:
+                id: s
+                hint_text: "Stock"
+            ModernInput:
+                id: e
+                hint_text: "Expiry Date (YYYY-MM-DD)"
+            ModernInput:
+                id: a
+                hint_text: "Arrival Date (YYYY-MM-DD)"
+            Label:
+                text: root.status_msg
+                color: ACCENT
+            PrimaryBtn:
+                text: "Save"
+                on_release: root.save(n.text, cat.text, c.text, r.text, s.text, e.text, a.text)
+            PrimaryBtn:
+                text: "Back"
+                on_release: app.root.current = "dashboard"
+
+# ---------- EDIT ----------
+
+<EditScreen>:
+    name: "edit"
+    canvas.before:
+        Color:
+            rgba: BG
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    ScrollView:
+        BoxLayout:
+            orientation: "vertical"
+            padding: dp(20)
+            spacing: dp(12)
+            size_hint_y: None
+            height: self.minimum_height
+            Label:
+                text: "Edit Product"
+                font_size: '18sp'
+                color: TEXT
+            ModernInput:
+                id: n
+                hint_text: "Name"
+            ModernInput:
+                id: cat
+                hint_text: "Category"
+            ModernInput:
+                id: c
+                hint_text: "Cost"
+            ModernInput:
+                id: r
+                hint_text: "Retail"
+            ModernInput:
+                id: s
+                hint_text: "Stock"
+            ModernInput:
+                id: e
+                hint_text: "Expiry Date (YYYY-MM-DD)"
+            Label:
+                text: root.status_msg
+                color: ACCENT
+            PrimaryBtn:
+                text: "Update"
+                on_release: root.save(n.text, cat.text, c.text, r.text, s.text, e.text)
+            PrimaryBtn:
+                text: "Back"
+                on_release: app.root.current = "inventory"
+
+# ---------- REPORTS ----------
+
+<ReportScreen>:
+    name: "reports"
+    canvas.before:
+        Color:
+            rgba: BG
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: "vertical"
+        padding: dp(15)
+        spacing: dp(10)
+        Label:
+            text: "Sales Report"
+            font_size: '18sp'
+            color: TEXT
+        ModernInput:
+            id: date_from
+            hint_text: "From date (YYYY-MM-DD)"
+        ModernInput:
+            id: date_to
+            hint_text: "To date (YYYY-MM-DD)"
+        PrimaryBtn:
+            text: "Filter"
+            on_release: root.filter_report(date_from.text, date_to.text)
+        ScrollView:
+            BoxLayout:
+                id: report_list
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(8)
+        PrimaryBtn:
+            text: "Back"
+            on_release: app.root.current = "dashboard"
+
+# ---------- SETTINGS ----------
+
+<SettingsScreen>:
+    name: "settings"
+    canvas.before:
+        Color:
+            rgba: BG
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    ScrollView:
+        BoxLayout:
+            orientation: "vertical"
+            padding: dp(20)
+            spacing: dp(15)
+            size_hint_y: None
+            height: self.minimum_height
+            Label:
+                text: "Settings"
+                font_size: '22sp'
+                bold: True
+                color: TEXT
+                size_hint_y: None
+                height: dp(30)
+            
+            # Status message
+            Label:
+                text: root.status_msg
+                color: root.status_color
+                size_hint_y: None
+                height: dp(20)
+                markup: True
+            
+            # Change Account Section
+            Label:
+                text: "Change Username/Password"
+                font_size: '18sp'
+                bold: True
+                color: TEXT
+                size_hint_y: None
+                height: dp(25)
+            
+            ModernInput:
+                id: current_username
+                hint_text: "Current Username"
+            
+            ModernInput:
+                id: current_password
+                hint_text: "Current Password"
+                password: True
+            
+            ModernInput:
+                id: new_username
+                hint_text: "New Username"
+            
+            ModernInput:
+                id: new_password
+                hint_text: "New Password"
+                password: True
+            
+            ModernInput:
+                id: confirm_password
+                hint_text: "Confirm New Password"
+                password: True
+            
+            PrimaryBtn:
+                text: "Update Account"
+                on_release: root.update_account(current_username.text, current_password.text, new_username.text, new_password.text, confirm_password.text)
+            
+            # Reset Data Section
+            Label:
+                text: "System Reset"
+                font_size: '18sp'
+                bold: True
+                color: TEXT
+                size_hint_y: None
+                height: dp(25)
+            
+            Label:
+                text: "Warning: This will permanently delete all products and sales data."
+                color: [1, 0.5, 0.5, 1]
+                size_hint_y: None
+                height: dp(20)
+            
+            PrimaryBtn:
+                text: "Reset System Data"
+                background_color: [1, 0.3, 0.3, 1]
+                on_release: root.reset_data()
+            
+            # Back Button
+            PrimaryBtn:
+                text: "Back to Dashboard"
+                on_release: app.root.current = "dashboard"
