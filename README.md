@@ -1,4 +1,4 @@
-Sari-Sari Store POS and Inventory Management System
+Sari-Sari Store POS and Inventory Management System 
 
 
 
